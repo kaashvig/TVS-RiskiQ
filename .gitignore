@@ -20,9 +20,6 @@ venv/
 # VS Code
 .vscode/
 
-# Data files (optional)
-data/raw/
-data/processed/
 
 # Models
 models/*.pkl
