@@ -8,11 +8,11 @@ import { useState } from 'react'
 import clsx from 'clsx'
 
 const navItems = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Asset Analysis', sub: 'Search & Analyze' },
-  { to: '/risk', icon: Shield, label: 'Risk Intelligence', sub: 'SHAP & Scoring' },
+  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', sub: 'Overview & KPIs' },
+  { to: '/risk', icon: Shield, label: 'Asset Analysis', sub: 'Search & Analyze' },
   { to: '/copilot', icon: Brain, label: 'AI Copilot', sub: 'LLM Recommendations' },
   { to: '/scenarios', icon: Zap, label: 'Scenario Sim', sub: 'Shock Testing' },
-  { to: '/portfolio', icon: BarChart3, label: 'Portfolio', sub: 'Executive View' },
+  { to: '/portfolio', icon: BarChart3, label: 'Portfolio Twin', sub: 'Digital Twin View' },
   { to: '/downloads', icon: Download, label: 'Downloads', sub: 'Reports & Export' },
 ]
 
@@ -44,7 +44,7 @@ export default function Sidebar() {
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="text-sm font-bold tracking-wide text-white">TVS PRISM</div>
+              <div className="text-sm font-bold tracking-wide text-white">TVS RiskIQ</div>
               <div className="text-[10px] text-white/40 font-medium tracking-wider uppercase">Credit Intelligence</div>
             </motion.div>
           )}

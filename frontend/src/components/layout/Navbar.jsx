@@ -5,11 +5,11 @@ import { useTheme } from '../../App'
 import { useLocation } from 'react-router-dom'
 
 const pageTitles = {
-  '/dashboard': { title: 'Asset Analysis', subtitle: 'Search and analyze individual assets' },
-  '/risk': { title: 'Risk Intelligence', subtitle: 'SHAP explanations and risk scoring' },
+  '/dashboard': { title: 'Dashboard', subtitle: 'Portfolio overview and key metrics' },
+  '/risk': { title: 'Asset Analysis', subtitle: 'Search and analyze individual assets' },
   '/copilot': { title: 'AI Credit Copilot', subtitle: 'LLM-powered lending recommendations' },
-  '/scenarios': { title: 'Scenario Simulation', subtitle: 'Market shock stress testing' },
-  '/portfolio': { title: 'Executive Portfolio', subtitle: 'Enterprise-wide risk overview' },
+  '/scenarios': { title: 'Scenario Simulator', subtitle: 'Market shock stress testing' },
+  '/portfolio': { title: 'Portfolio Digital Twin', subtitle: 'Enterprise-wide risk intelligence' },
   '/downloads': { title: 'Download Center', subtitle: 'Reports and data exports' },
 }
 
@@ -18,7 +18,7 @@ export default function Navbar() {
   const [notifications, setNotifications] = useState(3)
   const [showNotif, setShowNotif] = useState(false)
   const location = useLocation()
-  const page = pageTitles[location.pathname] || { title: 'TVS PRISM', subtitle: '' }
+  const page = pageTitles[location.pathname] || { title: 'TVS RiskIQ', subtitle: '' }
 
   return (
     <header className="flex-shrink-0 flex items-center justify-between px-6 h-16"

@@ -27,4 +27,13 @@ data/processed/
 # Models
 models/*.pkl
 models/*.joblib
-models/*.h5catboost_info/
+models/*.h5
+catboost_info/
+
+# Frontend / Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+.DS_Store
+
