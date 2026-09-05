@@ -27,4 +27,4 @@ data/processed/
 # Models
 models/*.pkl
 models/*.joblib
-models/*.h5
+models/*.h5catboost_info/
