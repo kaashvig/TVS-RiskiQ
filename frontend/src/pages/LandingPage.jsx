@@ -64,7 +64,7 @@ export default function LandingPage() {
             <Activity size={20} className="text-white" />
           </div>
           <div>
-            <span className="text-lg font-bold text-white tracking-wide">TVS RiskIQ</span>
+            <span className="text-lg font-bold text-white tracking-wide">TVS RiskTwin</span>
             <div className="text-[10px] text-white/40 font-medium tracking-widest uppercase">Credit Intelligence</div>
           </div>
         </div>
@@ -103,7 +103,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-lg text-white/50 max-w-2xl mx-auto mb-10 leading-relaxed">
-            TVS RiskIQ combines advanced ML models, explainable AI, and real-time portfolio analytics
+            TVS RiskTwin combines advanced ML models, explainable AI, and real-time portfolio analytics
             to transform vehicle financing decisions across India's two-wheeler market.
           </p>
 

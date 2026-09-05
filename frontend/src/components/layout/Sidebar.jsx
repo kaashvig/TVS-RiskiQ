@@ -44,7 +44,7 @@ export default function Sidebar() {
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="text-sm font-bold tracking-wide text-white">TVS RiskIQ</div>
+              <div className="text-sm font-bold tracking-wide text-white">TVS RiskTwin</div>
               <div className="text-[10px] text-white/40 font-medium tracking-wider uppercase">Credit Intelligence</div>
             </motion.div>
           )}
