@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environments
+venv/
+.venv/
+
+# Environment Variables
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Mac
+.DS_Store
+
+# VS Code
+.vscode/
+
+# Data files (optional)
+data/raw/
+data/processed/
+
+# Models
+models/*.pkl
+models/*.joblib
+models/*.h5
