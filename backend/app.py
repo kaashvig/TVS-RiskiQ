@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from routes.analyze import router as analyze_router
 from routes.reports import router as reports_router
+from routes.copilot import router as copilot_router
 
 load_dotenv()
 
@@ -35,6 +36,7 @@ app.add_middleware(
 # Register routers
 app.include_router(analyze_router)
 app.include_router(reports_router)
+app.include_router(copilot_router)
 
 @app.get("/", tags=["Health"])
 async def root():

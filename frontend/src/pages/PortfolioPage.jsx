@@ -15,15 +15,16 @@ import {
   portfolioKPIs, riskDistributionData, stateRiskData,
   assetCategoryData, profitabilityTrendData, portfolioTableData
 } from '../data/mockData'
+import { useTheme } from '../App'
 
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label, isDark }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-xl px-4 py-3" style={{
-        background: 'rgba(17,17,22,0.95)',
-        border: '1px solid rgba(255,255,255,0.1)',
+      <div className="rounded-xl px-4 py-3 shadow-xl border transition-colors duration-200" style={{
+        background: isDark ? '#111116' : '#FFFFFF',
+        borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)',
       }}>
-        <p className="text-xs font-semibold text-white/60 mb-1">{label}</p>
+        <p className="text-xs font-semibold mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : '#64748B' }}>{label}</p>
         {payload.map((p, i) => (
           <p key={i} className="text-xs font-bold" style={{ color: p.color || p.fill }}>
             {p.name}: {typeof p.value === 'number' && p.value > 1000
@@ -60,8 +61,13 @@ const heatmapData = [
 ]
 
 export default function PortfolioPage() {
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
+  const axisColor = isDark ? 'rgba(255,255,255,0.6)' : '#475569'
+  const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.08)'
+
   return (
-    <div className="p-6 space-y-6 bg-dark-950 min-h-full">
+    <div className="p-6 space-y-6 min-h-full bg-[var(--bg-app)] text-[var(--text-primary)] transition-colors duration-300">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -69,14 +75,13 @@ export default function PortfolioPage() {
         className="flex items-center justify-between"
       >
         <div>
-          <h2 className="text-2xl font-bold text-white">Portfolio Digital Twin</h2>
-          <p className="text-sm text-white/40 mt-1">Enterprise-wide portfolio analytics & risk intelligence</p>
+          <h2 className="text-2xl font-bold text-[var(--text-primary)]">Portfolio Digital Twin</h2>
+          <p className="text-sm text-[var(--text-muted)] mt-1">Enterprise-wide portfolio analytics & risk intelligence</p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="px-3 py-1.5 rounded-full flex items-center gap-1.5"
-            style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
+          <div className="px-3 py-1.5 rounded-full flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[10px] font-semibold text-emerald-400">REAL-TIME</span>
+            <span className="text-[10px] font-semibold text-emerald-500">REAL-TIME</span>
           </div>
         </div>
       </motion.div>
@@ -96,13 +101,13 @@ export default function PortfolioPage() {
                 style={{ background: `${kpi.color}15`, border: `1px solid ${kpi.color}20` }}>
                 <kpi.icon size={14} style={{ color: kpi.color }} />
               </div>
-              <div className={`flex items-center gap-0.5 text-[10px] font-semibold ${kpi.up ? 'text-emerald-400' : 'text-red-400'}`}>
+              <div className={`flex items-center gap-0.5 text-[10px] font-semibold ${kpi.up ? 'text-emerald-500' : 'text-tvs-red'}`}>
                 {kpi.up ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />}
                 {kpi.change}
               </div>
             </div>
-            <div className="text-lg font-bold text-white">{kpi.value}</div>
-            <div className="text-[10px] text-white/35 mt-0.5">{kpi.title}</div>
+            <div className="text-lg font-bold text-[var(--text-primary)]">{kpi.value}</div>
+            <div className="text-[10px] text-[var(--text-muted)] mt-0.5">{kpi.title}</div>
           </motion.div>
         ))}
       </div>
@@ -116,8 +121,8 @@ export default function PortfolioPage() {
           transition={{ delay: 0.3 }}
           className="glass-card p-5"
         >
-          <h3 className="text-sm font-bold text-white mb-1">Risk Segmentation</h3>
-          <p className="text-xs text-white/35 mb-5">Portfolio risk band breakdown</p>
+          <h3 className="text-sm font-bold text-[var(--text-primary)] mb-1">Risk Segmentation</h3>
+          <p className="text-xs text-[var(--text-muted)] mb-5">Portfolio risk band breakdown</p>
 
           <ResponsiveContainer width="100%" height={200}>
             <RechartsPie>
@@ -134,7 +139,7 @@ export default function PortfolioPage() {
                   <Cell key={index} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip isDark={isDark} />} />
             </RechartsPie>
           </ResponsiveContainer>
 
@@ -143,11 +148,11 @@ export default function PortfolioPage() {
               <div key={i} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full" style={{ background: band.color }} />
-                  <span className="text-xs text-white/60">{band.name}</span>
+                  <span className="text-xs text-[var(--text-secondary)]">{band.name}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-white/70">{band.value}</span>
-                  <span className="text-[10px] text-white/35">{band.pct}%</span>
+                  <span className="text-xs font-bold text-[var(--text-primary)]">{band.value}</span>
+                  <span className="text-[10px] text-[var(--text-muted)]">{band.pct}%</span>
                 </div>
               </div>
             ))}
@@ -163,12 +168,12 @@ export default function PortfolioPage() {
         >
           <div className="flex items-center justify-between mb-1">
             <div>
-              <h3 className="text-sm font-bold text-white">Regional Risk Distribution</h3>
-              <p className="text-xs text-white/35 mt-0.5">State-wise risk scores & asset concentration</p>
+              <h3 className="text-sm font-bold text-[var(--text-primary)]">Regional Risk Distribution</h3>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">State-wise risk scores & asset concentration</p>
             </div>
             <div className="flex items-center gap-1">
               <MapPin size={12} className="text-tvs-red" />
-              <span className="text-[10px] text-white/40">6 States</span>
+              <span className="text-[10px] text-[var(--text-muted)]">6 States</span>
             </div>
           </div>
 
@@ -181,8 +186,7 @@ export default function PortfolioPage() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.4 + i * 0.06 }}
-                  className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/[0.03] transition-colors"
-                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}
+                  className="flex items-center gap-4 p-3 rounded-xl bg-[var(--input-bg)] border border-[var(--border-subtle)] hover:bg-[var(--table-row-hover)] transition-colors"
                 >
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center"
                     style={{ background: `${riskColor}12`, border: `1px solid ${riskColor}20` }}>
@@ -190,10 +194,10 @@ export default function PortfolioPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-semibold text-white/80">{state.state}</span>
+                      <span className="text-xs font-semibold text-[var(--text-primary)]">{state.state}</span>
                       <span className="text-xs font-bold" style={{ color: riskColor }}>{state.riskScore}</span>
                     </div>
-                    <div className="w-full h-1.5 rounded-full bg-white/5 overflow-hidden">
+                    <div className="w-full h-1.5 rounded-full bg-[var(--border-subtle)] overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${state.riskScore}%` }}
@@ -204,12 +208,12 @@ export default function PortfolioPage() {
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <div className="text-xs font-semibold text-white/60">{state.assets}</div>
-                    <div className="text-[9px] text-white/30">assets</div>
+                    <div className="text-xs font-semibold text-[var(--text-primary)]">{state.assets}</div>
+                    <div className="text-[9px] text-[var(--text-muted)]">assets</div>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <div className="text-xs font-semibold text-white/60">{state.avgLTV}%</div>
-                    <div className="text-[9px] text-white/30">avg LTV</div>
+                    <div className="text-xs font-semibold text-[var(--text-primary)]">{state.avgLTV}%</div>
+                    <div className="text-[9px] text-[var(--text-muted)]">avg LTV</div>
                   </div>
                 </motion.div>
               )
@@ -227,8 +231,8 @@ export default function PortfolioPage() {
           transition={{ delay: 0.5 }}
           className="glass-card p-5"
         >
-          <h3 className="text-sm font-bold text-white mb-1">Asset Category Performance</h3>
-          <p className="text-xs text-white/35 mb-4">Vehicle type distribution with risk overlay</p>
+          <h3 className="text-sm font-bold text-[var(--text-primary)] mb-1">Asset Category Performance</h3>
+          <p className="text-xs text-[var(--text-muted)] mb-4">Vehicle type distribution with risk overlay</p>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={[
               { name: 'Motorcycles', assets: 474, avgRisk: 56.2 },
@@ -237,10 +241,10 @@ export default function PortfolioPage() {
               { name: 'EV', assets: 150, avgRisk: 48.5 },
               { name: 'Others', assets: 62, avgRisk: 54.1 },
             ]}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} />
-              <Tooltip content={<CustomTooltip />} />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: axisColor, fontSize: 10 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fill: axisColor, fontSize: 10 }} />
+              <Tooltip content={<CustomTooltip isDark={isDark} />} />
               <Bar dataKey="assets" name="Assets" radius={[6, 6, 0, 0]} barSize={36}>
                 {assetCategoryData.map((entry, index) => (
                   <Cell key={index} fill={entry.color} fillOpacity={0.8} />
@@ -257,18 +261,18 @@ export default function PortfolioPage() {
           transition={{ delay: 0.55 }}
           className="glass-card p-5"
         >
-          <h3 className="text-sm font-bold text-white mb-1">Risk Heatmap</h3>
-          <p className="text-xs text-white/35 mb-4">Average risk score by model × LTV segment</p>
+          <h3 className="text-sm font-bold text-[var(--text-primary)] mb-1">Risk Heatmap</h3>
+          <p className="text-xs text-[var(--text-muted)] mb-4">Average risk score by model × LTV segment</p>
 
-          <div className="overflow-hidden rounded-xl">
+          <div className="overflow-hidden rounded-xl border border-[var(--border-subtle)]">
             {/* Heatmap Header */}
-            <div className="grid grid-cols-4 gap-px">
-              <div className="p-2.5" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                <span className="text-[10px] text-white/30 font-semibold">Model</span>
+            <div className="grid grid-cols-4 gap-px bg-[var(--border-subtle)]">
+              <div className="p-2.5 bg-[var(--table-header-bg)]">
+                <span className="text-[10px] text-[var(--text-muted)] font-semibold">Model</span>
               </div>
               {['Low LTV', 'Med LTV', 'High LTV'].map(h => (
-                <div key={h} className="p-2.5 text-center" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                  <span className="text-[10px] text-white/40 font-semibold">{h}</span>
+                <div key={h} className="p-2.5 text-center bg-[var(--table-header-bg)]">
+                  <span className="text-[10px] text-[var(--text-muted)] font-semibold">{h}</span>
                 </div>
               ))}
             </div>
@@ -280,25 +284,25 @@ export default function PortfolioPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6 + ri * 0.08 }}
-                className="grid grid-cols-4 gap-px"
+                className="grid grid-cols-4 gap-px bg-[var(--border-subtle)]"
               >
-                <div className="p-2.5 flex items-center" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                  <span className="text-xs text-white/60 font-medium">{row.model}</span>
+                <div className="p-2.5 flex items-center bg-[var(--bg-card)]">
+                  <span className="text-xs text-[var(--text-primary)] font-medium">{row.model}</span>
                 </div>
                 {['Low LTV', 'Med LTV', 'High LTV'].map((key) => {
                   const val = row[key]
                   const intensity = val / 50
                   const bgColor = val > 40
-                    ? `rgba(227,30,36,${0.1 + intensity * 0.3})`
+                    ? `rgba(227,30,36,${isDark ? 0.15 + intensity * 0.3 : 0.1 + intensity * 0.2})`
                     : val > 25
-                      ? `rgba(245,158,11,${0.08 + intensity * 0.2})`
-                      : `rgba(16,185,129,${0.06 + intensity * 0.15})`
+                      ? `rgba(245,158,11,${isDark ? 0.12 + intensity * 0.2 : 0.1 + intensity * 0.15})`
+                      : `rgba(16,185,129,${isDark ? 0.1 + intensity * 0.15 : 0.1 + intensity * 0.1})`
                   const textColor = val > 40 ? '#E31E24' : val > 25 ? '#F59E0B' : '#10B981'
 
                   return (
                     <div key={key} className="p-2.5 text-center" style={{ background: bgColor }}>
                       <span className="text-sm font-bold" style={{ color: textColor }}>{val}</span>
-                      <div className="text-[9px] text-white/25 mt-0.5">risk score</div>
+                      <div className="text-[9px] text-[var(--text-muted)] mt-0.5">risk score</div>
                     </div>
                   )
                 })}
@@ -306,7 +310,7 @@ export default function PortfolioPage() {
             ))}
           </div>
 
-          <div className="flex items-center justify-center gap-4 mt-5 pt-4 border-t border-white/5">
+          <div className="flex items-center justify-center gap-4 mt-5 pt-4 border-t border-[var(--border-subtle)]">
             <div className="flex items-center gap-4">
               {[
                 { label: 'Low Risk', color: '#10B981' },
@@ -315,7 +319,7 @@ export default function PortfolioPage() {
               ].map(l => (
                 <div key={l.label} className="flex items-center gap-1.5">
                   <div className="w-3 h-3 rounded" style={{ background: `${l.color}30`, border: `1px solid ${l.color}40` }} />
-                  <span className="text-[10px] text-white/40">{l.label}</span>
+                  <span className="text-[10px] text-[var(--text-muted)]">{l.label}</span>
                 </div>
               ))}
             </div>
@@ -332,17 +336,17 @@ export default function PortfolioPage() {
       >
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h3 className="text-sm font-bold text-white">Profitability Trajectory</h3>
-            <p className="text-xs text-white/35 mt-0.5">Monthly profit vs loss with trend analysis</p>
+            <h3 className="text-sm font-bold text-[var(--text-primary)]">Profitability Trajectory</h3>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">Monthly profit vs loss with trend analysis</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5">
-              <div className="w-6 h-0.5 bg-emerald-400 rounded" />
-              <span className="text-[10px] text-white/50">Profit</span>
+              <div className="w-6 h-0.5 bg-emerald-500 rounded" />
+              <span className="text-[10px] text-[var(--text-muted)]">Profit</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-6 h-0.5 bg-tvs-red rounded" />
-              <span className="text-[10px] text-white/50">Loss</span>
+              <span className="text-[10px] text-[var(--text-muted)]">Loss</span>
             </div>
           </div>
         </div>
@@ -358,11 +362,11 @@ export default function PortfolioPage() {
                 <stop offset="95%" stopColor="#E31E24" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }} />
-            <YAxis axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }}
+            <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: axisColor, fontSize: 11 }} />
+            <YAxis axisLine={false} tickLine={false} tick={{ fill: axisColor, fontSize: 11 }}
               tickFormatter={v => `₹${(v / 100000).toFixed(0)}L`} />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<CustomTooltip isDark={isDark} />} />
             <Area type="monotone" dataKey="profit" stroke="#10B981" strokeWidth={2} fill="url(#profitGradPort)" name="Profit" />
             <Area type="monotone" dataKey="loss" stroke="#E31E24" strokeWidth={2} fill="url(#lossGradPort)" name="Loss" />
           </AreaChart>

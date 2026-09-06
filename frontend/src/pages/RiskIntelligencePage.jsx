@@ -3,23 +3,25 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Search, User, Bike, TrendingUp, TrendingDown, AlertTriangle,
   Shield, DollarSign, BarChart3, ChevronRight, Target,
-  Info, Zap, CheckCircle, XCircle, Clock
+  Info, Zap, CheckCircle, XCircle, Clock, Download
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell
 } from 'recharts'
 import { assetDatabase, defaultAsset } from '../data/mockData'
+import { useTheme } from '../App'
+import { downloadCreditReport } from '../utils/reportDownloader'
 
-const CustomTooltip = ({ active, payload }) => {
+const CustomTooltip = ({ active, payload, isDark }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-xl px-4 py-3" style={{
-        background: 'rgba(17,17,22,0.95)',
-        border: '1px solid rgba(255,255,255,0.1)',
+      <div className="rounded-xl px-4 py-3 shadow-xl border transition-colors duration-200" style={{
+        background: isDark ? '#111116' : '#FFFFFF',
+        borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)',
       }}>
-        <p className="text-xs font-bold text-white">{payload[0].payload.feature}</p>
-        <p className="text-xs text-white/60">Impact: {(payload[0].value * 100).toFixed(0)}%</p>
+        <p className="text-xs font-bold" style={{ color: isDark ? '#FFFFFF' : '#0F172A' }}>{payload[0].payload.feature}</p>
+        <p className="text-xs" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : '#64748B' }}>Impact: {(payload[0].value * 100).toFixed(0)}%</p>
       </div>
     )
   }
@@ -27,9 +29,14 @@ const CustomTooltip = ({ active, payload }) => {
 }
 
 export default function RiskIntelligencePage() {
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
   const [searchId, setSearchId] = useState('ASSET_1')
   const [asset, setAsset] = useState(defaultAsset)
   const [isSearching, setIsSearching] = useState(false)
+
+  const axisColor = isDark ? 'rgba(255,255,255,0.6)' : '#475569'
+  const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.08)'
 
   const handleSearch = () => {
     setIsSearching(true)
@@ -77,7 +84,7 @@ export default function RiskIntelligencePage() {
   }))
 
   return (
-    <div className="p-6 space-y-6 bg-dark-950 min-h-full">
+    <div className="p-6 space-y-6 min-h-full bg-[var(--bg-app)] text-[var(--text-primary)] transition-colors duration-300">
       {/* Search Bar */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -86,8 +93,8 @@ export default function RiskIntelligencePage() {
       >
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-lg font-bold text-white">Asset Analysis</h2>
-            <p className="text-xs text-white/40 mt-0.5">Search by Agreement ID to analyze individual assets</p>
+            <h2 className="text-lg font-bold text-[var(--text-primary)]">Asset Analysis</h2>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">Search by Agreement ID to analyze individual assets</p>
           </div>
           <div className="flex items-center gap-2">
             {Object.keys(assetDatabase).map(id => (
@@ -96,8 +103,8 @@ export default function RiskIntelligencePage() {
                 onClick={() => { setSearchId(id); }}
                 className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${
                   searchId === id
-                    ? 'bg-tvs-red/20 text-tvs-red border border-tvs-red/30'
-                    : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10'
+                    ? 'bg-tvs-red/20 text-tvs-red border border-tvs-red/30 font-bold'
+                    : 'bg-[var(--input-bg)] text-[var(--text-muted)] border border-[var(--border-subtle)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 {id}
@@ -107,7 +114,7 @@ export default function RiskIntelligencePage() {
         </div>
         <div className="flex gap-3">
           <div className="relative flex-1">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
             <input
               type="text"
               placeholder="Enter Agreement ID (e.g., ASSET_1)"
@@ -132,6 +139,16 @@ export default function RiskIntelligencePage() {
               <>Analyze</>
             )}
           </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => downloadCreditReport(asset.agmtId || searchId, asset)}
+            className="btn-ghost flex items-center gap-2 px-4 text-xs font-semibold cursor-pointer"
+          >
+            <Download size={14} />
+            <span>Download Report</span>
+          </motion.button>
         </div>
       </motion.div>
 
@@ -154,13 +171,12 @@ export default function RiskIntelligencePage() {
               className="glass-card p-5"
             >
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.25)' }}>
-                  <User size={18} className="text-blue-400" />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-500/15 border border-blue-500/25">
+                  <User size={18} className="text-blue-500" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Customer Profile</h3>
-                  <p className="text-xs text-white/35">{asset.agmtId}</p>
+                  <h3 className="text-sm font-bold text-[var(--text-primary)]">Customer Profile</h3>
+                  <p className="text-xs text-[var(--text-muted)]">{asset.agmtId}</p>
                 </div>
                 <div className="ml-auto">
                   <span className={`${
@@ -183,9 +199,9 @@ export default function RiskIntelligencePage() {
                   { label: 'State', value: asset.state },
                   { label: 'Branch', value: asset.branch },
                 ].map((item, i) => (
-                  <div key={i} className="flex justify-between items-center py-1.5 border-b border-white/[0.04]">
-                    <span className="text-xs text-white/40">{item.label}</span>
-                    <span className="text-xs font-semibold text-white/80">{item.value}</span>
+                  <div key={i} className="flex justify-between items-center py-1.5 border-b border-[var(--border-subtle)]">
+                    <span className="text-xs text-[var(--text-muted)]">{item.label}</span>
+                    <span className="text-xs font-semibold text-[var(--text-primary)]">{item.value}</span>
                   </div>
                 ))}
               </div>
@@ -199,19 +215,18 @@ export default function RiskIntelligencePage() {
               className="glass-card p-5"
             >
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ background: 'rgba(227,30,36,0.15)', border: '1px solid rgba(227,30,36,0.25)' }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-tvs-red/15 border border-tvs-red/25">
                   <Bike size={18} className="text-tvs-red" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Asset Profile</h3>
-                  <p className="text-xs text-white/35">{asset.assetModel} · {asset.assetFuel}</p>
+                  <h3 className="text-sm font-bold text-[var(--text-primary)]">Asset Profile</h3>
+                  <p className="text-xs text-[var(--text-muted)]">{asset.assetModel} · {asset.assetFuel}</p>
                 </div>
                 <div className="ml-auto">
                   <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-semibold ${
-                    asset.riskBand === 'High' ? 'bg-red-500/15 text-red-400 border border-red-500/20' :
-                    asset.riskBand === 'Medium' ? 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/20' :
-                    'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
+                    asset.riskBand === 'High' ? 'bg-tvs-red/15 text-tvs-red border border-tvs-red/20' :
+                    asset.riskBand === 'Medium' ? 'bg-amber-500/15 text-amber-500 border border-amber-500/20' :
+                    'bg-emerald-500/15 text-emerald-500 border border-emerald-500/20'
                   }`}>
                     {asset.riskBand} Risk
                   </span>
@@ -228,9 +243,9 @@ export default function RiskIntelligencePage() {
                   { label: 'Rec. LTV', value: `${asset.recommendedLtv}%` },
                   { label: 'Rec. Tenure', value: `${asset.recommendedTenure} months` },
                 ].map((item, i) => (
-                  <div key={i} className="flex justify-between items-center py-1.5 border-b border-white/[0.04]">
-                    <span className="text-xs text-white/40">{item.label}</span>
-                    <span className="text-xs font-semibold text-white/80">{item.value}</span>
+                  <div key={i} className="flex justify-between items-center py-1.5 border-b border-[var(--border-subtle)]">
+                    <span className="text-xs text-[var(--text-muted)]">{item.label}</span>
+                    <span className="text-xs font-semibold text-[var(--text-primary)]">{item.value}</span>
                   </div>
                 ))}
               </div>
@@ -252,10 +267,10 @@ export default function RiskIntelligencePage() {
                     style={{ background: `${card.color}15`, border: `1px solid ${card.color}25` }}>
                     <card.icon size={15} style={{ color: card.color }} />
                   </div>
-                  <span className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">{card.title}</span>
+                  <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">{card.title}</span>
                 </div>
-                <div className="text-xl font-bold text-white mb-1">{card.value}</div>
-                <div className="text-xs text-white/40">{card.sub}</div>
+                <div className="text-xl font-bold text-[var(--text-primary)] mb-1">{card.value}</div>
+                <div className="text-xs text-[var(--text-muted)]">{card.sub}</div>
               </motion.div>
             ))}
           </div>
@@ -271,19 +286,19 @@ export default function RiskIntelligencePage() {
             >
               <div className="flex items-center gap-2 mb-1">
                 <Zap size={16} className="text-tvs-red" />
-                <h3 className="text-sm font-bold text-white">Explainable AI — Feature Importance</h3>
+                <h3 className="text-sm font-bold text-[var(--text-primary)]">Explainable AI — Feature Importance</h3>
               </div>
-              <p className="text-xs text-white/35 mb-5">SHAP-style impact analysis on risk prediction</p>
+              <p className="text-xs text-[var(--text-muted)] mb-5">SHAP-style impact analysis on risk prediction</p>
 
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={shapData} layout="vertical" barCategoryGap={8}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" horizontal={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridColor} horizontal={false} />
                   <XAxis type="number" axisLine={false} tickLine={false}
-                    tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }}
+                    tick={{ fill: axisColor, fontSize: 11 }}
                     tickFormatter={v => `${(v * 100).toFixed(0)}%`} />
                   <YAxis type="category" dataKey="feature" axisLine={false} tickLine={false}
-                    tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} width={120} />
-                  <Tooltip content={<CustomTooltip />} />
+                    tick={{ fill: axisColor, fontSize: 11 }} width={120} />
+                  <Tooltip content={<CustomTooltip isDark={isDark} />} />
                   <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={22}>
                     {shapData.map((entry, index) => (
                       <Cell key={index} fill={entry.fill} fillOpacity={0.8} />
@@ -292,14 +307,14 @@ export default function RiskIntelligencePage() {
                 </BarChart>
               </ResponsiveContainer>
 
-              <div className="flex items-center gap-6 mt-4 pt-4 border-t border-white/5">
+              <div className="flex items-center gap-6 mt-4 pt-4 border-t border-[var(--border-subtle)]">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded bg-emerald-500/80" />
-                  <span className="text-[10px] text-white/50">Positive Impact (Reduces Risk)</span>
+                  <span className="text-[10px] text-[var(--text-muted)]">Positive Impact (Reduces Risk)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded bg-red-500/80" />
-                  <span className="text-[10px] text-white/50">Negative Impact (Increases Risk)</span>
+                  <span className="text-[10px] text-[var(--text-muted)]">Negative Impact (Increases Risk)</span>
                 </div>
               </div>
             </motion.div>
@@ -315,7 +330,7 @@ export default function RiskIntelligencePage() {
               <div className="glass-card p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <AlertTriangle size={14} className="text-tvs-red" />
-                  <h4 className="text-sm font-bold text-white">Risk Drivers</h4>
+                  <h4 className="text-sm font-bold text-[var(--text-primary)]">Risk Drivers</h4>
                 </div>
                 <div className="space-y-2.5">
                   {asset.riskDrivers.map((driver, i) => (
@@ -324,13 +339,12 @@ export default function RiskIntelligencePage() {
                       initial={{ opacity: 0, x: 10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.6 + i * 0.08 }}
-                      className="flex items-center gap-3 p-3 rounded-xl"
-                      style={{ background: 'rgba(227,30,36,0.06)', border: '1px solid rgba(227,30,36,0.12)' }}
+                      className="flex items-center gap-3 p-3 rounded-xl bg-tvs-red/10 border border-tvs-red/20"
                     >
-                      <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-tvs-red/15">
+                      <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-tvs-red/20">
                         <XCircle size={12} className="text-tvs-red" />
                       </div>
-                      <span className="text-xs text-white/70 font-medium">{driver}</span>
+                      <span className="text-xs text-[var(--text-primary)] font-medium">{driver}</span>
                     </motion.div>
                   ))}
                 </div>
@@ -339,8 +353,8 @@ export default function RiskIntelligencePage() {
               {/* Mitigations Card */}
               <div className="glass-card p-5">
                 <div className="flex items-center gap-2 mb-4">
-                  <CheckCircle size={14} className="text-emerald-400" />
-                  <h4 className="text-sm font-bold text-white">Recommended Mitigations</h4>
+                  <CheckCircle size={14} className="text-emerald-500" />
+                  <h4 className="text-sm font-bold text-[var(--text-primary)]">Recommended Mitigations</h4>
                 </div>
                 <div className="space-y-2.5">
                   {asset.mitigations.map((mit, i) => (
@@ -349,13 +363,12 @@ export default function RiskIntelligencePage() {
                       initial={{ opacity: 0, x: 10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.7 + i * 0.08 }}
-                      className="flex items-center gap-3 p-3 rounded-xl"
-                      style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.12)' }}
+                      className="flex items-center gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20"
                     >
-                      <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-emerald-400/15">
-                        <CheckCircle size={12} className="text-emerald-400" />
+                      <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-emerald-500/20">
+                        <CheckCircle size={12} className="text-emerald-500" />
                       </div>
-                      <span className="text-xs text-white/70 font-medium">{mit}</span>
+                      <span className="text-xs text-[var(--text-primary)] font-medium">{mit}</span>
                     </motion.div>
                   ))}
                 </div>

@@ -1,4 +1,5 @@
 import io
+import re
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -173,7 +174,9 @@ class PDFReportService:
         summary_text = ml_results.get('ai_copilot_summary', 'No summary available.')
         for p_line in summary_text.split('\n'):
             if p_line.strip():
-                story.append(Paragraph(p_line.replace('**', '<b>').replace('**', '</b>'), body_style))
+                clean_line = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', p_line.strip())
+                clean_line = clean_line.replace('&', '&amp;') if '&amp;' not in clean_line else clean_line
+                story.append(Paragraph(clean_line, body_style))
                 story.append(Spacer(1, 4))
 
         story.append(Spacer(1, 15))

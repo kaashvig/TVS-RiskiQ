@@ -51,3 +51,13 @@ class ReportRequest(BaseModel):
     customer_details: CustomerDetails
     asset_details: AssetDetails
     analysis_data: Optional[Dict[str, Any]] = None
+
+class ChatRequest(BaseModel):
+    message: str
+    session_id: Optional[str] = "default"
+
+class ChatResponse(BaseModel):
+    response: str
+    current_asset: Optional[str] = None
+    detected_intent: str
+

@@ -24,16 +24,11 @@ export default function Sidebar() {
     <motion.aside
       animate={{ width: collapsed ? 72 : 240 }}
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-      className="relative flex-shrink-0 h-full flex flex-col overflow-hidden"
-      style={{
-        background: 'rgba(10,10,15,0.95)',
-        borderRight: '1px solid rgba(255,255,255,0.07)',
-      }}
+      className="relative flex-shrink-0 h-full flex flex-col overflow-hidden bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] transition-colors duration-300"
     >
       {/* Logo area */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-white/5">
-        <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center"
-          style={{ background: 'linear-gradient(135deg, #E31E24, #B91519)' }}>
+      <div className="flex items-center gap-3 px-4 py-5 border-b border-[var(--border-subtle)]">
+        <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-r from-tvs-red to-tvs-red-dark">
           <Activity size={18} className="text-white" />
         </div>
         <AnimatePresence>
@@ -44,8 +39,8 @@ export default function Sidebar() {
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="text-sm font-bold tracking-wide text-white">TVS RiskTwin</div>
-              <div className="text-[10px] text-white/40 font-medium tracking-wider uppercase">Credit Intelligence</div>
+              <div className="text-sm font-bold tracking-wide text-[var(--text-primary)]">TVS RiskTwin</div>
+              <div className="text-[10px] text-[var(--text-muted)] font-medium tracking-wider uppercase">Credit Intelligence</div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -61,7 +56,7 @@ export default function Sidebar() {
               exit={{ opacity: 0 }}
               className="px-3 mb-3"
             >
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-white/30">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">
                 Navigation
               </span>
             </motion.div>
@@ -87,7 +82,7 @@ export default function Sidebar() {
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
-                <item.icon size={18} className={clsx('flex-shrink-0', isActive ? 'text-tvs-red' : 'text-white/40 group-hover:text-white/70')} />
+                <item.icon size={18} className={clsx('flex-shrink-0', isActive ? 'text-tvs-red' : 'text-[var(--text-muted)] group-hover:text-[var(--text-primary)]')} />
                 <AnimatePresence>
                   {!collapsed && (
                     <motion.div
@@ -97,13 +92,13 @@ export default function Sidebar() {
                       transition={{ duration: 0.2 }}
                       className="flex-1 min-w-0"
                     >
-                      <div className="text-sm font-medium leading-tight">{item.label}</div>
-                      <div className="text-[10px] text-white/30 mt-0.5">{item.sub}</div>
+                      <div className="text-sm font-medium leading-tight text-[var(--text-primary)]">{item.label}</div>
+                      <div className="text-[10px] text-[var(--text-muted)] mt-0.5">{item.sub}</div>
                     </motion.div>
                   )}
                 </AnimatePresence>
                 {!collapsed && isActive && (
-                  <ChevronRight size={14} className="text-white/30 flex-shrink-0" />
+                  <ChevronRight size={14} className="text-[var(--text-muted)] flex-shrink-0" />
                 )}
               </motion.div>
             </NavLink>
@@ -112,10 +107,10 @@ export default function Sidebar() {
       </nav>
 
       {/* Collapse toggle */}
-      <div className="p-3 border-t border-white/5">
+      <div className="p-3 border-t border-[var(--border-subtle)]">
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-white/40 hover:text-white/70 hover:bg-white/05 transition-all text-xs font-medium"
+          className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--table-row-hover)] transition-all text-xs font-medium"
         >
           <motion.div animate={{ rotate: collapsed ? 180 : 0 }} transition={{ duration: 0.3 }}>
             <ChevronRight size={16} />

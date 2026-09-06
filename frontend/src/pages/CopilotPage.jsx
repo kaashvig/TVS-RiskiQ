@@ -6,11 +6,14 @@ import {
   Clock, ChevronRight, Loader2
 } from 'lucide-react'
 import { assetDatabase, defaultAsset } from '../data/mockData'
+import { useTheme } from '../App'
+import MarkdownRenderer from '../components/common/MarkdownRenderer'
 
 const quickQueries = [
   'Analyze risk for ASSET_1',
-  'Should we approve ASSET_2?',
-  'What mitigations for ASSET_3?',
+  'Why is this asset high risk?',
+  'What actions can reduce risk?',
+  'Why lower LTV?',
   'Compare ASSET_1 vs ASSET_2',
 ]
 
@@ -20,47 +23,188 @@ const initialMessages = [
     content: `Welcome to the **AI Credit Copilot**. I'm your intelligent lending advisor powered by advanced ML models and LLM reasoning.
 
 I can help you with:
-- **Risk Assessment** — Analyze any asset's risk profile
+- **Risk Assessment** — Analyze any asset's risk profile (ASSET_1, ASSET_2, ASSET_3)
 - **Credit Decisions** — Get approval/rejection recommendations
 - **Risk Explanations** — Understand what's driving the risk score
 - **Mitigation Strategies** — Actionable steps to reduce exposure
 
-Try asking about any asset (ASSET_1, ASSET_2, or ASSET_3) to get started.`,
+Try asking "Analyze risk for ASSET_1" or follow-up questions like "Why is this asset high risk?"`,
     timestamp: '16:00',
   },
 ]
 
-function getAssetResponse(query) {
-  const upperQuery = query.toUpperCase()
-  let assetId = null
-  if (upperQuery.includes('ASSET_1')) assetId = 'ASSET_1'
-  else if (upperQuery.includes('ASSET_2')) assetId = 'ASSET_2'
-  else if (upperQuery.includes('ASSET_3')) assetId = 'ASSET_3'
+function extractAndNormalizeAssetId(text) {
+  if (!text) return null
+  const match = text.match(/(?:asset|ASSET)[\s_#]?(?:no\.?|num|number)?[\s_]?([1-9]\d*)/i)
+  if (match) {
+    return `ASSET_${match[1]}`
+  }
+  return null
+}
 
-  if (!assetId) {
+function detectIntent(text) {
+  const t = text.toLowerCase()
+  if ((t.includes('why') || t.includes('reason')) && (t.includes('risk') || t.includes('classified') || t.includes('score') || t.includes('rating'))) {
+    return 'WHY_RISK'
+  }
+  if (t.includes('high risk') || t.includes('classified as high risk')) {
+    return 'WHY_RISK'
+  }
+  if (t.includes('ltv') && (t.includes('why') || t.includes('lower') || t.includes('reduce') || t.includes('recommending') || t.includes('recommend') || t.includes('ratio'))) {
+    return 'WHY_LTV'
+  }
+  if (['action', 'reduce risk', 'mitigat', 'lower risk', 'lessen risk', 'decrease risk'].some(k => t.includes(k))) {
+    return 'MITIGATION'
+  }
+  if (['profit', 'margin', 'return', 'gain', 'revenue'].some(k => t.includes(k))) {
+    return 'PROFITABILITY'
+  }
+  if (['stress', 'shock', 'inflation', 'slowdown', 'scenario', 'perform under'].some(k => t.includes(k))) {
+    return 'STRESS_TEST'
+  }
+  if (['compare', ' vs ', 'versus', 'difference'].some(k => t.includes(k))) {
+    return 'COMPARE'
+  }
+  if (['analyze', 'analysis', 'evaluate', 'check', 'approve', 'review'].some(k => t.includes(k))) {
+    return 'ANALYZE_RISK'
+  }
+  return 'GENERAL_QUERY'
+}
+
+function getAssetResponse(query, previousAssetId) {
+  const explicitAsset = extractAndNormalizeAssetId(query)
+  const current_asset = explicitAsset || previousAssetId
+  const intent = detectIntent(query)
+
+  console.log(`Current Asset: ${current_asset}`)
+  console.log(`Detected Intent: ${intent}`)
+
+  if (!current_asset) {
     return {
-      content: `I'd be happy to help! Please specify an asset ID to analyze. Available assets: **ASSET_1**, **ASSET_2**, **ASSET_3**.
-
-Each analysis includes:
-- Residual risk score & risk band
-- Profitability assessment
-- Credit decision recommendation
-- Actionable mitigation strategies`,
+      content: `I'd be happy to help! Please specify an asset ID to analyze. Available assets: **ASSET_1**, **ASSET_2**, **ASSET_3**.`,
+      assetId: null,
       asset: null,
+      intent
     }
   }
 
-  const asset = assetDatabase[assetId]
+  const asset = assetDatabase[current_asset] || null
+
+  let responseContent = ""
+  if (current_asset === 'ASSET_1') {
+    if (intent === 'WHY_RISK') {
+      responseContent = `ASSET_1 is classified as High Risk because:
+
+- Missing CIBIL score
+- Non-regular employment
+- High residual value gap
+- Risk score exceeds approval threshold`
+    } else if (intent === 'MITIGATION') {
+      responseContent = `For ASSET_1, risk can be reduced by:
+
+- Increasing down payment
+- Reducing LTV
+- Adding co-signer
+- Shortening tenure
+- Comprehensive insurance`
+    } else if (intent === 'WHY_LTV') {
+      responseContent = `For ASSET_1, reducing LTV decreases lender exposure and expected loss because lower LTV provides a higher equity cushion against vehicle value depreciation and unhedged default risk.`
+    } else if (intent === 'PROFITABILITY') {
+      responseContent = `For ASSET_1:
+- Profitability Score: **49.15/100**
+- Expected Profit: **₹34,222**
+- Margin Outlook: Viable return if recommended LTV (65%) and shortened tenure (18 months) are enforced.`
+    } else if (intent === 'STRESS_TEST') {
+      responseContent = `Stress Test Analysis for ASSET_1:
+- **EV Market Shock**: Residual risk score increases to 68.30 (Expected profit: ₹28,900)
+- **High Inflation**: Residual risk score increases to 64.80 (Expected profit: ₹31,500)
+- **Economic Slowdown**: Residual risk score reaches 72.40 (Expected profit: ₹22,800)`
+    } else {
+      responseContent = asset ? asset.copilotText : `Analysis for **${current_asset}**`
+    }
+  } else if (current_asset === 'ASSET_2') {
+    if (intent === 'WHY_RISK') {
+      responseContent = `ASSET_2 is classified as Low Risk (Score: 53.94) because:
+
+- Higher monthly salary (₹60,000)
+- Newer asset age (0-1 Year)
+- Moderate LTV ratio (78.4%)
+- Favorable vehicle depreciation profile`
+    } else if (intent === 'MITIGATION') {
+      responseContent = `For ASSET_2, risk can be managed by:
+
+- Standard monitoring protocol
+- Quarterly check-in verification
+- Maintaining LTV cap at 75%
+- Automated NACH mandate`
+    } else if (intent === 'WHY_LTV') {
+      responseContent = `For ASSET_2, capping LTV at 75% maintains strong collateral coverage while accommodating a high-earning borrower.`
+    } else if (intent === 'PROFITABILITY') {
+      responseContent = `For ASSET_2:
+- Profitability Score: **61.60/100**
+- Expected Profit: **₹52,100**
+- Margin Outlook: Highly profitable credit profile under standard terms.`
+    } else if (intent === 'STRESS_TEST') {
+      responseContent = `Stress Test Analysis for ASSET_2:
+- **EV Market Shock**: Risk score 58.20
+- **High Inflation**: Risk score 56.10
+- **Economic Slowdown**: Risk score 62.40`
+    } else {
+      responseContent = asset ? asset.copilotText : `Analysis for **${current_asset}**`
+    }
+  } else if (current_asset === 'ASSET_3') {
+    if (intent === 'WHY_RISK') {
+      responseContent = `ASSET_3 is classified as Medium Risk (Score: 56.58) because:
+
+- Strong CIBIL score (763) offsetting income variability
+- Agricultural employment income fluctuation
+- EV residual value market uncertainty`
+    } else if (intent === 'MITIGATION') {
+      responseContent = `For ASSET_3, risk can be reduced by:
+
+- Mandatory comprehensive EV insurance
+- Battery health certificate requirement
+- Telematics battery health monitoring
+- Capping LTV at 70%`
+    } else if (intent === 'WHY_LTV') {
+      responseContent = `For ASSET_3, reducing LTV to 70% protects against electric vehicle battery degradation and technological obsolescence.`
+    } else if (intent === 'PROFITABILITY') {
+      responseContent = `For ASSET_3:
+- Profitability Score: **61.88/100**
+- Expected Profit: **₹48,900**
+- Margin Outlook: Solid return supported by high borrower credit score (763).`
+    } else if (intent === 'STRESS_TEST') {
+      responseContent = `Stress Test Analysis for ASSET_3:
+- **EV Market Shock**: Risk score 64.10 (higher EV market sensitivity)
+- **High Inflation**: Risk score 59.30
+- **Economic Slowdown**: Risk score 66.80`
+    } else {
+      responseContent = asset ? asset.copilotText : `Analysis for **${current_asset}**`
+    }
+  } else if (intent === 'COMPARE') {
+    responseContent = `**Asset Risk Comparison**:
+
+- **ASSET_1**: High Risk (61.65) | Profitability: 49.15% | Decision: Approve with Conditions (25% down payment, co-signer required)
+- **ASSET_2**: Low Risk (53.94) | Profitability: 61.60% | Decision: Approve standard terms
+- **ASSET_3**: Medium Risk (56.58) | Profitability: 61.88% | Decision: Approve with EV insurance & battery check`
+  } else {
+    responseContent = asset ? asset.copilotText : `Analysis for **${current_asset}**`
+  }
+
   return {
-    content: asset.copilotText,
-    asset,
+    content: responseContent,
+    assetId: current_asset,
+    asset: asset,
+    intent
   }
 }
 
 export default function CopilotPage() {
+  const { theme } = useTheme()
   const [messages, setMessages] = useState(initialMessages)
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [currentAssetId, setCurrentAssetId] = useState(null)
   const [activeAsset, setActiveAsset] = useState(null)
   const messagesEndRef = useRef(null)
 
@@ -72,7 +216,7 @@ export default function CopilotPage() {
     scrollToBottom()
   }, [messages])
 
-  const handleSend = (text) => {
+  const handleSend = async (text) => {
     const msg = text || input
     if (!msg.trim()) return
 
@@ -87,9 +231,43 @@ export default function CopilotPage() {
     setInput('')
     setIsTyping(true)
 
+    try {
+      // Try fetching response from backend API endpoint first
+      const res = await fetch('http://localhost:8000/copilot/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg, session_id: 'default' }),
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        const targetAssetId = data.current_asset
+        if (targetAssetId) {
+          setCurrentAssetId(targetAssetId)
+          if (assetDatabase[targetAssetId]) {
+            setActiveAsset(assetDatabase[targetAssetId])
+          }
+        }
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: data.response,
+          timestamp: timeStr,
+        }])
+        setIsTyping(false)
+        return
+      }
+    } catch (e) {
+      console.warn('[CopilotPage] Backend API chat call error, using local fallback:', e)
+    }
+
+    // Fallback to client-side engine with conversational memory
     setTimeout(() => {
-      const response = getAssetResponse(msg)
-      if (response.asset) setActiveAsset(response.asset)
+      const response = getAssetResponse(msg, currentAssetId)
+      if (response.assetId) {
+        setCurrentAssetId(response.assetId)
+        if (response.asset) setActiveAsset(response.asset)
+        else if (assetDatabase[response.assetId]) setActiveAsset(assetDatabase[response.assetId])
+      }
 
       setMessages(prev => [...prev, {
         role: 'assistant',
@@ -97,26 +275,24 @@ export default function CopilotPage() {
         timestamp: timeStr,
       }])
       setIsTyping(false)
-    }, 1200)
+    }, 400)
   }
 
   return (
-    <div className="flex h-full bg-dark-950">
+    <div className="flex h-full bg-[var(--bg-app)] text-[var(--text-primary)] transition-colors duration-300">
       {/* Chat Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Chat Header */}
-        <div className="flex-shrink-0 px-6 py-4 border-b border-white/5"
-          style={{ background: 'rgba(10,10,15,0.6)' }}>
+        <div className="flex-shrink-0 px-6 py-4 border-b border-[var(--border-subtle)] bg-[var(--bg-header)] backdrop-blur-md">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #E31E24, #B91519)' }}>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-r from-tvs-red to-tvs-red-dark">
               <Brain size={18} className="text-white" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">AI Credit Copilot</h3>
+              <h3 className="text-sm font-bold text-[var(--text-primary)]">AI Credit Copilot</h3>
               <div className="flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[10px] text-emerald-400 font-medium">Online — llama3-70b-8192 + XGBoost + Catboost</span>
+                <span className="text-[10px] text-emerald-500 font-medium">Online — llama3-70b-8192 + XGBoost + Catboost</span>
               </div>
             </div>
           </div>
@@ -133,35 +309,25 @@ export default function CopilotPage() {
               className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}
             >
               {msg.role === 'assistant' && (
-                <div className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center mt-1"
-                  style={{ background: 'rgba(227,30,36,0.15)', border: '1px solid rgba(227,30,36,0.2)' }}>
+                <div className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center mt-1 bg-tvs-red/15 border border-tvs-red/25">
                   <Bot size={14} className="text-tvs-red" />
                 </div>
               )}
               <div className={`max-w-[70%] ${msg.role === 'user' ? 'order-first' : ''}`}>
                 <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === 'user'
-                    ? 'bg-tvs-red/20 text-white/90 border border-tvs-red/20 rounded-br-md'
-                    : 'glass-card !rounded-bl-md text-white/80 hover:transform-none'
+                    ? 'bg-tvs-red/20 text-[var(--text-primary)] border border-tvs-red/30 rounded-br-md font-medium'
+                    : 'glass-card !rounded-bl-md text-[var(--text-primary)] hover:transform-none'
                   }`} style={msg.role === 'assistant' ? { transform: 'none' } : {}}>
-                  {msg.content.split('\n').map((line, li) => (
-                    <p key={li} className={li > 0 ? 'mt-2' : ''}>
-                      {line.split(/(\*\*.*?\*\*)/).map((part, pi) => {
-                        if (part.startsWith('**') && part.endsWith('**')) {
-                          return <strong key={pi} className="text-white font-semibold">{part.slice(2, -2)}</strong>
-                        }
-                        return <span key={pi}>{part}</span>
-                      })}
-                    </p>
-                  ))}
+                  <MarkdownRenderer content={msg.content} />
                 </div>
                 <div className="flex items-center gap-3 mt-1.5 px-1">
-                  <span className="text-[10px] text-white/25">{msg.timestamp}</span>
+                  <span className="text-[10px] text-[var(--text-muted)]">{msg.timestamp}</span>
                   {msg.role === 'assistant' && i > 0 && (
                     <div className="flex items-center gap-2">
-                      <button className="text-white/20 hover:text-white/50 transition-colors">
+                      <button className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
                         <Copy size={10} />
                       </button>
-                      <button className="text-white/20 hover:text-white/50 transition-colors">
+                      <button className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
                         <ThumbsUp size={10} />
                       </button>
                     </div>
@@ -169,9 +335,8 @@ export default function CopilotPage() {
                 </div>
               </div>
               {msg.role === 'user' && (
-                <div className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center mt-1"
-                  style={{ background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.2)' }}>
-                  <User size={14} className="text-blue-400" />
+                <div className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center mt-1 bg-blue-500/15 border border-blue-500/25">
+                  <User size={14} className="text-blue-500" />
                 </div>
               )}
             </motion.div>
@@ -183,8 +348,7 @@ export default function CopilotPage() {
               animate={{ opacity: 1 }}
               className="flex items-center gap-3"
             >
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ background: 'rgba(227,30,36,0.15)', border: '1px solid rgba(227,30,36,0.2)' }}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-tvs-red/15 border border-tvs-red/25">
                 <Bot size={14} className="text-tvs-red" />
               </div>
               <div className="glass-card px-4 py-3 flex items-center gap-2" style={{ transform: 'none' }}>
@@ -198,7 +362,7 @@ export default function CopilotPage() {
                     />
                   ))}
                 </motion.div>
-                <span className="text-xs text-white/40">Analyzing...</span>
+                <span className="text-xs text-[var(--text-muted)]">Analyzing...</span>
               </div>
             </motion.div>
           )}
@@ -206,13 +370,12 @@ export default function CopilotPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="flex-shrink-0 px-6 py-2 flex gap-2 overflow-x-auto no-scrollbar">
+        <div className="flex-shrink-0 px-6 py-2 flex gap-2 overflow-x-auto no-scrollbar border-t border-[var(--border-subtle)]">
           {quickQueries.map((q, i) => (
             <button
               key={i}
               onClick={() => handleSend(q)}
-              className="flex-shrink-0 px-3 py-1.5 rounded-full text-[10px] font-semibold text-white/50 hover:text-white/80 transition-all"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+              className="flex-shrink-0 px-3 py-1.5 rounded-full text-[10px] font-semibold text-[var(--text-secondary)] bg-[var(--input-bg)] border border-[var(--border-subtle)] hover:text-[var(--text-primary)] hover:border-tvs-red/40 transition-all"
             >
               {q}
             </button>
@@ -220,7 +383,7 @@ export default function CopilotPage() {
         </div>
 
         {/* Input */}
-        <div className="flex-shrink-0 p-4 border-t border-white/5">
+        <div className="flex-shrink-0 p-4 border-t border-[var(--border-subtle)]">
           <div className="flex gap-3">
             <div className="relative flex-1">
               <input
@@ -246,11 +409,10 @@ export default function CopilotPage() {
       </div>
 
       {/* Right Panel — Credit Decision */}
-      <div className="hidden lg:flex flex-col w-80 border-l border-white/5 overflow-y-auto"
-        style={{ background: 'rgba(10,10,15,0.5)' }}>
-        <div className="p-5 border-b border-white/5">
-          <h4 className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-1">Credit Decision Panel</h4>
-          <p className="text-[10px] text-white/25">
+      <div className="hidden lg:flex flex-col w-80 border-l border-[var(--border-subtle)] overflow-y-auto bg-[var(--bg-sidebar)] transition-colors duration-300">
+        <div className="p-5 border-b border-[var(--border-subtle)]">
+          <h4 className="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-1">Credit Decision Panel</h4>
+          <p className="text-[10px] text-[var(--text-muted)]">
             {activeAsset ? `Showing analysis for ${activeAsset.agmtId}` : 'Ask about an asset to see details'}
           </p>
         </div>
@@ -260,10 +422,10 @@ export default function CopilotPage() {
             {/* Decision Badge */}
             <div className="text-center py-4">
               <div className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold ${activeAsset.decision === 'APPROVE'
-                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25'
+                  ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/25'
                   : activeAsset.decision.includes('CONDITION')
-                    ? 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/25'
-                    : 'bg-red-500/15 text-red-400 border border-red-500/25'
+                    ? 'bg-amber-500/15 text-amber-500 border border-amber-500/25'
+                    : 'bg-tvs-red/15 text-tvs-red border border-tvs-red/25'
                 }`}>
                 {activeAsset.decision === 'APPROVE' ? <CheckCircle size={16} /> :
                   activeAsset.decision.includes('CONDITION') ? <AlertTriangle size={16} /> :
@@ -281,9 +443,8 @@ export default function CopilotPage() {
                 { label: 'LGD', value: `${activeAsset.lgdPct}%`, color: '#F59E0B' },
                 { label: 'LTV', value: `${activeAsset.ltv}%`, color: '#E31E24' },
               ].map((m, i) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-xl"
-                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <span className="text-xs text-white/50">{m.label}</span>
+                <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-[var(--input-bg)] border border-[var(--border-subtle)]">
+                  <span className="text-xs text-[var(--text-muted)]">{m.label}</span>
                   <span className="text-sm font-bold" style={{ color: m.color }}>{m.value}</span>
                 </div>
               ))}
@@ -293,10 +454,9 @@ export default function CopilotPage() {
             <div className="space-y-2">
               <div className="section-label">Risk Drivers</div>
               {activeAsset.riskDrivers.map((d, i) => (
-                <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg"
-                  style={{ background: 'rgba(227,30,36,0.05)', border: '1px solid rgba(227,30,36,0.1)' }}>
+                <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-tvs-red/10 border border-tvs-red/20">
                   <AlertTriangle size={11} className="text-tvs-red flex-shrink-0" />
-                  <span className="text-[11px] text-white/60">{d}</span>
+                  <span className="text-[11px] text-[var(--text-primary)] font-medium">{d}</span>
                 </div>
               ))}
             </div>
@@ -305,21 +465,19 @@ export default function CopilotPage() {
             <div className="space-y-2">
               <div className="section-label">Recommended Actions</div>
               {activeAsset.mitigations.map((m, i) => (
-                <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg"
-                  style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.1)' }}>
-                  <CheckCircle size={11} className="text-emerald-400 flex-shrink-0" />
-                  <span className="text-[11px] text-white/60">{m}</span>
+                <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                  <CheckCircle size={11} className="text-emerald-500 flex-shrink-0" />
+                  <span className="text-[11px] text-[var(--text-primary)] font-medium">{m}</span>
                 </div>
               ))}
             </div>
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-              style={{ background: 'rgba(227,30,36,0.1)', border: '1px solid rgba(227,30,36,0.15)' }}>
-              <Sparkles size={24} className="text-tvs-red/50" />
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 bg-tvs-red/10 border border-tvs-red/20">
+              <Sparkles size={24} className="text-tvs-red/60" />
             </div>
-            <p className="text-xs text-white/30 leading-relaxed">
+            <p className="text-xs text-[var(--text-muted)] leading-relaxed">
               Ask the AI Copilot about an asset to see the credit decision panel with risk metrics and recommendations.
             </p>
           </div>

@@ -1,11 +1,15 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Download, FileText, FileSpreadsheet, BarChart3,
-  Calendar, Clock, Check, ChevronRight
+  Calendar, Clock, Check, ChevronRight, Loader2
 } from 'lucide-react'
+import { useTheme } from '../App'
+import { downloadCreditReport } from '../utils/reportDownloader'
 
 const reports = [
   {
+    id: 'ASSET_1',
     title: 'Portfolio Risk Summary Report',
     description: 'Complete portfolio analysis with risk distribution, regional breakdown, and asset performance metrics.',
     type: 'PDF',
@@ -15,6 +19,7 @@ const reports = [
     color: '#E31E24',
   },
   {
+    id: 'ASSET_2',
     title: 'Asset-Level Risk Scores',
     description: 'Detailed risk scores, SHAP explanations, and credit decisions for all analyzed assets.',
     type: 'XLSX',
@@ -24,6 +29,7 @@ const reports = [
     color: '#10B981',
   },
   {
+    id: 'ASSET_3',
     title: 'Scenario Stress Test Results',
     description: 'Comparative analysis across EV shock, inflation, and economic slowdown scenarios.',
     type: 'PDF',
@@ -33,6 +39,7 @@ const reports = [
     color: '#3B82F6',
   },
   {
+    id: 'ASSET_1',
     title: 'AI Copilot Decision Log',
     description: 'Complete audit trail of all AI-generated credit decisions with reasoning and confidence scores.',
     type: 'CSV',
@@ -42,6 +49,7 @@ const reports = [
     color: '#F59E0B',
   },
   {
+    id: 'ASSET_2',
     title: 'Regional Performance Report',
     description: 'State-wise risk distribution, asset concentration, and branch performance analysis.',
     type: 'PDF',
@@ -51,6 +59,7 @@ const reports = [
     color: '#8B5CF6',
   },
   {
+    id: 'ASSET_3',
     title: 'Residual Value Forecast Data',
     description: 'ML-generated residual value predictions for all asset categories across time horizons.',
     type: 'XLSX',
@@ -62,23 +71,32 @@ const reports = [
 ]
 
 export default function DownloadPage() {
+  const { theme } = useTheme()
+  const [downloadingId, setDownloadingId] = useState(null)
+
+  const handleDownload = async (assetId) => {
+    setDownloadingId(assetId)
+    await downloadCreditReport(assetId)
+    setDownloadingId(null)
+  }
+
   return (
-    <div className="p-6 space-y-6 bg-dark-950 min-h-full">
+    <div className="p-6 space-y-6 min-h-full bg-[var(--bg-app)] text-[var(--text-primary)] transition-colors duration-300">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h2 className="text-2xl font-bold text-white">Download Center</h2>
-        <p className="text-sm text-white/40 mt-1">Export reports, analytics data, and model outputs</p>
+        <h2 className="text-2xl font-bold text-[var(--text-primary)]">Download Center</h2>
+        <p className="text-sm text-[var(--text-muted)] mt-1">Export reports, analytics data, and model outputs</p>
       </motion.div>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: 'Generate Full Report', sub: 'PDF with all modules', icon: FileText, color: '#E31E24' },
-          { label: 'Export Raw Data', sub: 'XLSX/CSV formats', icon: FileSpreadsheet, color: '#10B981' },
-          { label: 'Schedule Report', sub: 'Weekly/Monthly auto', icon: Calendar, color: '#3B82F6' },
+          { label: 'Generate Full Report', sub: 'PDF with all modules', icon: FileText, color: '#E31E24', assetId: 'ASSET_1' },
+          { label: 'Export Raw Data', sub: 'XLSX/CSV formats', icon: FileSpreadsheet, color: '#10B981', assetId: 'ASSET_2' },
+          { label: 'Schedule Report', sub: 'Weekly/Monthly auto', icon: Calendar, color: '#3B82F6', assetId: 'ASSET_3' },
         ].map((action, i) => (
           <motion.button
             key={i}
@@ -87,17 +105,18 @@ export default function DownloadPage() {
             transition={{ delay: i * 0.1 }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="glass-card p-5 text-left flex items-center gap-4"
+            onClick={() => handleDownload(action.assetId)}
+            className="glass-card p-5 text-left flex items-center gap-4 cursor-pointer"
           >
             <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{ background: `${action.color}15`, border: `1px solid ${action.color}25` }}>
               <action.icon size={18} style={{ color: action.color }} />
             </div>
             <div>
-              <div className="text-sm font-bold text-white">{action.label}</div>
-              <div className="text-xs text-white/40 mt-0.5">{action.sub}</div>
+              <div className="text-sm font-bold text-[var(--text-primary)]">{action.label}</div>
+              <div className="text-xs text-[var(--text-muted)] mt-0.5">{action.sub}</div>
             </div>
-            <ChevronRight size={16} className="text-white/20 ml-auto" />
+            <ChevronRight size={16} className="text-[var(--text-muted)] ml-auto" />
           </motion.button>
         ))}
       </div>
@@ -118,26 +137,32 @@ export default function DownloadPage() {
               <report.icon size={20} style={{ color: report.color }} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-bold text-white mb-0.5">{report.title}</div>
-              <p className="text-xs text-white/40 leading-relaxed">{report.description}</p>
+              <div className="text-sm font-bold text-[var(--text-primary)] mb-0.5">{report.title}</div>
+              <p className="text-xs text-[var(--text-muted)] leading-relaxed">{report.description}</p>
               <div className="flex items-center gap-3 mt-2">
                 <span className="inline-block px-2 py-0.5 rounded text-[9px] font-bold tracking-wider"
                   style={{ background: `${report.color}15`, color: report.color }}>
                   {report.type}
                 </span>
-                <span className="text-[10px] text-white/25 flex items-center gap-1">
+                <span className="text-[10px] text-[var(--text-muted)] flex items-center gap-1">
                   <Clock size={9} /> {report.date}
                 </span>
-                <span className="text-[10px] text-white/25">{report.size}</span>
+                <span className="text-[10px] text-[var(--text-muted)]">{report.size}</span>
               </div>
             </div>
             <motion.button
-              whileHover={{ scale: 1.08 }}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="btn-ghost !px-4 !py-2 text-xs opacity-70 group-hover:opacity-100 transition-opacity"
+              onClick={() => handleDownload(report.id)}
+              disabled={downloadingId === report.id}
+              className="btn-ghost !px-4 !py-2 text-xs flex items-center gap-2 cursor-pointer"
             >
-              <Download size={14} />
-              Download
+              {downloadingId === report.id ? (
+                <Loader2 size={14} className="animate-spin text-tvs-red" />
+              ) : (
+                <Download size={14} />
+              )}
+              <span>{downloadingId === report.id ? 'Generating...' : 'Download'}</span>
             </motion.button>
           </motion.div>
         ))}
